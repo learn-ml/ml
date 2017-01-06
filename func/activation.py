@@ -3,7 +3,7 @@ import numpy as np
 from func import AbstractFunction
 
 
-class Sigmod(AbstractFunction):
+class Sigmoid(AbstractFunction):
     def apply(self, x):
         return 1 / (1 + np.exp(-x))
 
@@ -19,5 +19,5 @@ class Tanh(AbstractFunction):
         return 1 - np.power(apply(x), 2)
 
 
-sigmod = Sigmod()
+sigmoid = Sigmoid()
 tanh = Tanh()
