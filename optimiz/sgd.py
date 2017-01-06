@@ -14,7 +14,7 @@ class StochasticGradientDescent(Optimizer):
             raise ValueError("len(x) must be equals to len(y).")
         for epoch in range(self.__iteration):
             for i in range(len(x)):
-                gradient = func(x[i], y[i])
+                gradient = func(x[i], y[i], theta)
                 theta += self.__alpha * gradient
             if epoch % 20 == 0:
                 logging.info("epoch:%s", epoch)

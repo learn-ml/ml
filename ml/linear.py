@@ -1,86 +1,67 @@
 import numpy as np
-import pandas as pd
-from scipy.io.arff import loadarff
 
-from func.activation import sigmod
+from func.activation import sigmoid
 from ml.classifier import AbstractClassification
+from ml.regression import AbstractRegression
 from optimiz.optimizer import Optimizer
-from optimiz.sgd import StochasticGradientDescent
+
+
+class LinearRegression(AbstractRegression):
+    def __init__(self):
+        pass
+
+    def predict(self, x):
+        pass
+
+    def fit(self, x, y, optimizer):
+        pass
 
 
 class LogicRegression(AbstractClassification):
     def __init__(self, optimizer):
-        if not isinstance(optimizer, Optimizer):
+        if not optimizer or not isinstance(optimizer, Optimizer):
             raise TypeError("optimizer must be the subclass of optimize.optimizer.Optimizer")
         self.__optimizer = optimizer
-        self.__theta = None
+        self.__weights = None
+        self.__bias = None
         self.__labels = None
 
     def __forward(self, x):
-        if self.__theta is None:
+        if self.__weights is None or self.__bias is None:
             raise AssertionError("you should use this model after fitted it, call fit() first.")
-        y = sigmod.apply(x.dot(self.__theta[1:]) + self.__theta[0])
+        hx = sigmoid.apply(x.dot(self.__weights) + self.__bias)
+        return 1 if hx[0] > 0.5 else 0
 
-        return [self.__labels['class'][1] if yi > 0.5 else self.__labels['class'][0] for yi in y]
-
-    def __backward(self, x, y):
-        yv = self.__labels['value'][y]
-        hx = self.__labels['value'][self.__forward(x)[0]]
-        bg = yv - hx
-        tg = [(yv - hx) * x[j] for j in range(0, len(self.__theta) - 1)]
-        tg.insert(0, bg)
-        return np.array(tg).reshape(len(self.__theta), 1)
-
-    """
-    Fit the model according to the given training data.
-
-    Parameters:
-    -----------
-    X:  {array-like, sparse matrix}, shape (n_samples, n_features)
-        Training vector, where n_samples is the number of samples and n_features is the number of features.
-    y: array-like, shape (n_samples,)
-        Target vector relative to X.
-
-    Returns:
-    --------
-    self: object
-        Return self
-    """
+    def __backward(self, x, y, params):
+        self.__bias = params[0]
+        self.__weights = params[1:]
+        yv = self.__labels["value"][y]
+        hx = self.__forward(x)
+        return np.r_[yv - hx, x * (yv - hx)].reshape(-1, 1)
 
     def fit(self, X, y):
         m, n = X.shape
         if m < 1 or n < 1:
             raise ValueError("invalid training set")
-        # init params with bias self.__theta[0] is bias, self.__theta[1:] is weights
-        self.__theta = np.random.rand(n + 1, 1)
+
         self.__labels = {
             'class': {i: v for i, v in enumerate(np.unique(y))},
             'value': {v: i for i, v in enumerate(np.unique(y))}
         }
-        self.__optimizer.optimize(self.__backward, X, y, self.__theta)
+
+        self.__weights = np.random.rand(n, 1)
+        self.__bias = np.random.rand(1, 1)
+        self.__optimizer.optimize(self.__backward, X, y, np.r_[self.__bias, self.__weights])
+
         return self
 
     def test(self, X, y):
         hx = self.classify(X)
         count = 0
         for i in range(len(hx)):
-            if hx[i] != [y.iloc[i]]:
+            if hx[i] != y.iloc[i]:
                 count += 1
-        print count / float(len(X))
+        return count / float(len(X))
 
     def classify(self, X):
-        return [self.__forward(x) for x in X]
-
-
-if __name__ == '__main__':
-    data, meta = loadarff("../dataset/electricity-normalized.arff")
-    df = pd.DataFrame(data)
-    x = np.array(df.iloc[:-100, :-1])
-    test_x = np.array(df.iloc[-100:, :-1])
-    y = df['class'][:-100]
-    test_y = df['class'][-100:]
-
-    optimizer = StochasticGradientDescent(iteration=100)
-    lr = LogicRegression(optimizer)
-    lr.fit(x, y)
-    lr.test(test_x, test_y)
+        return [self.__labels['class'][self.__forward(x)] for x in X]
