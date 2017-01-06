@@ -30,9 +30,9 @@ class LinearRegression(AbstractRegression):
 
 
 if __name__ == '__main__':
-    regression = LinearRegression(2)
-    sgd = StochasticGradientDescent(iteration=5000, alpha=0.01)
-    x = np.array([[1], [2], [3], [4], [5]])
-    y = x * 2 + 1
+    regression = LinearRegression(3)
+    sgd = StochasticGradientDescent(iteration=80000, alpha=0.01)
+    x = np.array([[1, 2], [2, 4], [3, 6], [4, 8], [5, 10]])
+    y = x.dot(np.array([2, 3])) + 4
     regression.fit(x, y, sgd)
     print regression.predict(x[0])

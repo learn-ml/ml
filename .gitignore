@@ -36,3 +36,6 @@ build/
 
 # nodejs
 # *.tar.gz
+
+# python
+*.pyc
