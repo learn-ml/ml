@@ -5,7 +5,7 @@ from scipy.io.arff import loadarff
 from ml.linear import LogicRegression
 from optimiz.sgd import StochasticGradientDescent
 
-optimizer = StochasticGradientDescent()
+optimizer = StochasticGradientDescent(iteration=80)
 
 
 def testLogicRegression():
@@ -18,4 +18,8 @@ def testLogicRegression():
 
     lr = LogicRegression(optimizer)
     lr.fit(x, y)
-    lr.test(test_x, test_y)
+    print lr.test(test_x, test_y)
+
+
+if __name__ == '__main__':
+    testLogicRegression()
